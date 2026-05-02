@@ -7,4 +7,5 @@ requests
 python-dotenv
 reportlab
 gunicorn
+mysql-connector-python
 
