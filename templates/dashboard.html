@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Crop Recommendation System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    body {
+        background: url("{{ url_for('static', filename='crops/agriculture1.jpg') }}") no-repeat center center fixed;
+        background-size: cover;
+        font-size: 18px;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 70, 0, 0.55);
+        z-index: -1;
+    }
+
+    .navbar {
+        padding: 18px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .navbar-brand {
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .nav-btn {
+        font-size: 16px;
+        padding: 8px 18px;
+        margin-left: 8px;
+        border-radius: 8px;
+    }
+
+    .section { display: none; }
+    .active { display: block; }
+
+    .card {
+        border-radius: 18px;
+        transition: 0.3s;
+        font-size: 17px;
+        backdrop-filter: blur(6px);
+        background: rgba(255,255,255,0.9);
+    }
+
+    .card:hover { transform: scale(1.03); }
+
+    .form-control {
+        height: 45px;
+        font-size: 16px;
+    }
+
+    .btn {
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    .crop-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+    h4 {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .modal-content {
+        animation: zoomIn 0.4s ease;
+        border-radius: 15px;
+    }
+
+    @keyframes zoomIn {
+        from { transform: scale(0.6); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark bg-success">
+    <div class="container">
+        <span class="navbar-brand">🌱 SMART CROP RECOMMENDATION SYSTEM</span>
+
+        <div>
+            <button class="btn btn-light nav-btn" onclick="show('login')">Login</button>
+            <button class="btn btn-light nav-btn" onclick="show('register')">Register</button>
+            <button class="btn btn-light nav-btn" onclick="show('predict')">New Prediction</button>
+            <button class="btn btn-light nav-btn" onclick="show('history')">History</button>
+            <a href="/logout" class="btn btn-danger nav-btn">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+
+{% if msg %}
+<div class="alert alert-info text-center">
+    {{ msg }}
+</div>
+{% endif %}
+
+<!-- LOGIN -->
+<div id="login" class="section">
+    <div class="card p-4 shadow">
+        <h4 class="text-success">🔐 Login</h4>
+        <form method="POST" action="/login">
+            <input class="form-control mb-3" name="username" placeholder="Username" required>
+            <input class="form-control mb-3" type="password" name="password" placeholder="Password" required>
+            <button class="btn btn-success w-100">Login</button>
+        </form>
+    </div>
+</div>
+
+<!-- REGISTER -->
+<div id="register" class="section">
+    <div class="card p-4 shadow">
+        <h4 class="text-success">📝 Register</h4>
+        <form method="POST" action="/register">
+            <input class="form-control mb-3" name="name" placeholder="Full Name" required>
+            <input class="form-control mb-3" name="username" placeholder="Email" required>
+            <input class="form-control mb-3" type="password" name="password" placeholder="Password" required>
+            <button class="btn btn-primary w-100">Register</button>
+        </form>
+    </div>
+</div>
+
+<!-- PREDICT -->
+<div id="predict" class="section active">
+    <div class="card p-4 shadow">
+        <h4 class="text-success">🌾 New Prediction</h4>
+
+        <form method="POST" action="/predict">
+            <div class="row">
+                <div class="col">
+                    <input class="form-control mb-3" name="n" placeholder="Nitrogen" required>
+                </div>
+                <div class="col">
+                    <input class="form-control mb-3" name="p" placeholder="Phosphorus" required>
+                </div>
+                <div class="col">
+                    <input class="form-control mb-3" name="k" placeholder="Potassium" required>
+                </div>
+            </div>
+
+            <input class="form-control mb-3" name="temp" placeholder="Temperature" required>
+            <input class="form-control mb-3" name="humidity" placeholder="Humidity" required>
+            <input class="form-control mb-3" name="ph" placeholder="pH" required>
+            <input class="form-control mb-3" name="rainfall" placeholder="Rainfall" required>
+
+            <button class="btn btn-success w-100">Predict Crop</button>
+        </form>
+    </div>
+</div>
+
+<!-- HISTORY -->
+<div id="history" class="section">
+    <div class="card p-4 shadow">
+        <h4 class="text-success">📊 Prediction History</h4>
+
+        {% for row in data %}
+        <div class="row border rounded p-3 mb-3 align-items-center">
+
+            <div class="col-md-3">
+                <img src="{{ row.img }}" class="crop-img">
+            </div>
+
+            <div class="col-md-6">
+                <h5 class="text-success fw-bold">🌾 {{ row.crop }}</h5>
+                <p>N: {{ row.n }} | P: {{ row.p }} | K: {{ row.k }}</p>
+                <p>Temp: {{ row.temp }} | Humidity: {{ row.humidity }}</p>
+                <p>pH: {{ row.ph }} | Rainfall: {{ row.rainfall }}</p>
+            </div>
+
+            <div class="col-md-3 text-end">
+
+                <!-- 📧 EMAIL BUTTON (ADDED) -->
+                <a href="/send/{{ row.id }}" class="btn btn-info mb-2">
+                    📧 Send Email
+                </a><br>
+
+                <!-- EDIT -->
+                <a href="/update/{{ row.id }}" class="btn btn-warning mb-2">✏️ Edit</a><br>
+
+                <!-- DELETE -->
+                <a href="/delete/{{ row.id }}" class="btn btn-danger"
+                   onclick="return confirm('Delete this record?')">
+                   🗑 Delete
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+</div>
+
+<!-- RESULT POPUP (UNCHANGED) -->
+{% if crop %}
+<div class="modal fade show" style="display:block; background: rgba(0,0,0,0.6);">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content text-center p-4">
+
+        <h3 class="text-success">🌾 Recommended Crop</h3>
+        <h2 class="fw-bold">{{ crop }}</h2>
+
+        <img src="{{ img }}" class="img-fluid rounded mt-3" style="max-height:200px;">
+
+        <hr>
+
+        <h5 class="text-success">🔥 Top 3 Suggestions</h5>
+
+        <div class="row mt-3">
+            {% for item in top3 %}
+            <div class="col-md-4">
+                <img src="{{ item.img }}" class="img-fluid rounded mb-2" style="height:120px; object-fit:cover;">
+                <p class="fw-bold text-success">{{ item.name }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <a href="/download/{{ pdf_file | urlencode }}" class="btn btn-primary">📄 Download Report</a>
+            <a href="/dashboard" class="btn btn-secondary">Close</a>
+        </div>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function show(id) {
+    let sections = document.querySelectorAll(".section");
+    sections.forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+</script>
+
+</body>
+</html>
